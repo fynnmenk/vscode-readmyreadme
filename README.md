@@ -1,10 +1,11 @@
 # READMYREADME VSC Extension
 
-Heavily documented sample code for https://code.visualstudio.com/api/language-extensions/language-server-extension-guide
+Heavily documented sample code for <https://code.visualstudio.com/api/language-extensions/language-server-extension-guide>
 
-### Functionality
+## Functionality
 
 This Language Server works for plain text file. It has the following language features:
+
 - Completions
 - Diagnostics regenerated on each file change or configuration change
 
