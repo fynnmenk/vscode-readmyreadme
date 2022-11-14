@@ -38,12 +38,16 @@ export async function validateOutlineStructure(textDocument: TextDocument): Prom
 // analyze given headline and return diagnostic and missing sections
 function analyzeTextDocumentHeadline(headline : string, headlineRange: Range, missingSections: Section[]): [Diagnostic | void, Section[]] {
     let headlineMatch = false;
+
     //check if headline matches missing headlines out of settings
     missingSections.forEach((section, key) => {
         section.keywords.forEach((keyword) => {
-            if(headline.toLowerCase().includes(keyword.toLowerCase())) {
-                missingSections.splice(key, 1);
-                headlineMatch = true;
+            //check if headline matches keyword aslong no match is found
+            while (headlineMatch == false) {
+                if(headline.toLowerCase().includes(keyword.toLowerCase())) {
+                    missingSections.splice(key, 1);
+                    headlineMatch = true;
+                }
             }
         });
     });

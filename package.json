@@ -59,7 +59,6 @@
 									"Introduction",
 									"Demo",
 									"Example",
-									"Examples",
 									"About"
 								]
 							},
@@ -67,21 +66,19 @@
 								"name": "Table of contents",
 								"required": true,
 								"keywords":[
-									"Table of contents",
+									"Table of content",
 									"listing",
 									"tabular array",
-									"agenda",
-									"Contents"
+									"agenda"
 								]
 							},
 							{			
 								"name": "Installation",
-								"required": false,
+								"required": true,
 								"keywords":[
 									"Installation",
 									"How To",
 									"Quick start",
-									"Install",
 									"Getting Started",
 									"Quickstart",
 									"Setup"
@@ -89,7 +86,7 @@
 							},
 							{			
 								"name": "Usage",
-								"required": false,
+								"required": true,
 								"keywords":[
 									"Usage",
 									"Configuration",
@@ -100,7 +97,7 @@
 							},
 							{			
 								"name": "Contributing",
-								"required": false,
+								"required": true,
 								"keywords":[
 									"Contributing",
 									"Related",
@@ -108,12 +105,13 @@
 									"Contribute",
 									"Assistance",
 									"Contact",
-									"Development"
+									"Development",
+									"Contribution"
 								]
 							},
 							{			
 								"name": "Credits",
-								"required": false,
+								"required": true,
 								"keywords":[
 									"Credits",
 									"Tribute",
@@ -126,7 +124,7 @@
 							},
 							{			
 								"name": "License",
-								"required": false,
+								"required": true,
 								"keywords":[
 									"License",
 									"Permission",

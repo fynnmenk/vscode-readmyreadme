@@ -119,21 +119,19 @@ const defaultSettings: ExampleSettings = {
 				name: "Table of contents",
 				required: true,
 				keywords:[
-					"Table of contents",
+					"Table of content",
 					"listing",
 					"tabular array",
-					"agenda",
-					"Contents"
+					"agenda"
 				]
 			},
 			{			
 				name: "Installation",
-				required: false,
+				required: true,
 				keywords:[
 					"Installation",
 					"How To",
 					"Quick start",
-					"Install",
 					"Getting Started",
 					"Quickstart",
 					"Setup"
@@ -141,7 +139,7 @@ const defaultSettings: ExampleSettings = {
 			},
 			{			
 				name: "Usage",
-				required: false,
+				required: true,
 				keywords:[
 					"Usage",
 					"Configuration",
@@ -152,7 +150,7 @@ const defaultSettings: ExampleSettings = {
 			},
 			{			
 				name: "Contributing",
-				required: false,
+				required: true,
 				keywords:[
 					"Contributing",
 					"Related",
@@ -160,12 +158,13 @@ const defaultSettings: ExampleSettings = {
 					"Contribute",
 					"Assistance",
 					"Contact",
-					"Development"
+					"Development",
+					"Contribution"
 				]
 			},
 			{			
 				name: "Credits",
-				required: false,
+				required: true,
 				keywords:[
 					"Credits",
 					"Tribute",
@@ -178,7 +177,7 @@ const defaultSettings: ExampleSettings = {
 			},
 			{			
 				name: "License",
-				required: false,
+				required: true,
 				keywords:[
 					"License",
 					"Permission",
@@ -239,9 +238,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const diagnostics: Diagnostic[] = [];
 	// Validate the documents outline structure if it is a Readme File	
 	if (textDocument.uri.endsWith("README.md")) {
-		// check when the document was last edited
-		const lastEdited = new Date(textDocument.version);
-		if(lastEdited > new Date(+30)) {
+		// check only on first start MOCKED FOR NOW
+		if (textDocument.version == 1) {
 			// if the document was edited more than 30 days ago, show a information message
 			connection.window.showInformationMessage("This README.md file was last edited more than 30 days ago. Please check if it is still up to date.");
 		}
