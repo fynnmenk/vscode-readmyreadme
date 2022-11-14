@@ -4,7 +4,7 @@
 	"description": "A study project to improve your ReadMe quality",
 	"author": "Microsoft Corporation",
 	"license": "MIT",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/fynnmenk/vscode-readmyreadme"
@@ -52,7 +52,7 @@
 							{
 								"name": "Description",
 								"required": true,
-								"keywords":[
+								"keywords": [
 									"Description",
 									"Why?",
 									"Overview",
@@ -65,17 +65,17 @@
 							{
 								"name": "Table of contents",
 								"required": true,
-								"keywords":[
+								"keywords": [
 									"Table of content",
 									"listing",
 									"tabular array",
 									"agenda"
 								]
 							},
-							{			
+							{
 								"name": "Installation",
 								"required": true,
-								"keywords":[
+								"keywords": [
 									"Installation",
 									"How To",
 									"Quick start",
@@ -84,10 +84,10 @@
 									"Setup"
 								]
 							},
-							{			
+							{
 								"name": "Usage",
 								"required": true,
-								"keywords":[
+								"keywords": [
 									"Usage",
 									"Configuration",
 									"Options",
@@ -95,10 +95,10 @@
 									"Configure"
 								]
 							},
-							{			
+							{
 								"name": "Contributing",
 								"required": true,
-								"keywords":[
+								"keywords": [
 									"Contributing",
 									"Related",
 									"Involve",
@@ -109,10 +109,10 @@
 									"Contribution"
 								]
 							},
-							{			
+							{
 								"name": "Credits",
 								"required": true,
-								"keywords":[
+								"keywords": [
 									"Credits",
 									"Tribute",
 									"Acknowledgement",
@@ -122,10 +122,10 @@
 									"Community"
 								]
 							},
-							{			
+							{
 								"name": "License",
 								"required": true,
-								"keywords":[
+								"keywords": [
 									"License",
 									"Permission",
 									"Consent"
