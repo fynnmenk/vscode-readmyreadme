@@ -26,7 +26,7 @@
 	"contributes": {
 		"configuration": {
 			"type": "object",
-			"title": "Configuration",
+			"title": "Settings for ReadMyReadMe",
 			"properties": {
 				"readmyreadme.maxNumberOfProblems": {
 					"scope": "resource",
@@ -44,6 +44,97 @@
 					],
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
+				},
+				"readmyreadme.outlineStructure": {
+					"description": "Checks the outline structure of your ReadMe on base of scientific research results.",
+					"default": {
+						"sections": [
+							{
+								"name": "Description",
+								"required": true,
+								"keywords":[
+									"Description",
+									"Why?",
+									"Overview",
+									"Introduction",
+									"Demo",
+									"Example",
+									"Examples",
+									"About"
+								]
+							},
+							{
+								"name": "Table of contents",
+								"required": true,
+								"keywords":[
+									"Table of contents",
+									"listing",
+									"tabular array",
+									"agenda",
+									"Contents"
+								]
+							},
+							{			
+								"name": "Installation",
+								"required": false,
+								"keywords":[
+									"Installation",
+									"How To",
+									"Quick start",
+									"Install",
+									"Getting Started",
+									"Quickstart",
+									"Setup"
+								]
+							},
+							{			
+								"name": "Usage",
+								"required": false,
+								"keywords":[
+									"Usage",
+									"Configuration",
+									"Options",
+									"Implementation",
+									"Configure"
+								]
+							},
+							{			
+								"name": "Contributing",
+								"required": false,
+								"keywords":[
+									"Contributing",
+									"Related",
+									"Involve",
+									"Contribute",
+									"Assistance",
+									"Contact",
+									"Development"
+								]
+							},
+							{			
+								"name": "Credits",
+								"required": false,
+								"keywords":[
+									"Credits",
+									"Tribute",
+									"Acknowledgement",
+									"Thanks",
+									"Supporters",
+									"Contributors",
+									"Community"
+								]
+							},
+							{			
+								"name": "License",
+								"required": false,
+								"keywords":[
+									"License",
+									"Permission",
+									"Consent"
+								]
+							}
+						]
+					}
 				}
 			}
 		}

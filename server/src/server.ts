@@ -26,7 +26,7 @@ import { validateOutlineStructure } from './readmyreadme';
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
 
-// Create a simple text document manager.
+// Create a the text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 let hasConfigurationCapability = false;
@@ -53,9 +53,9 @@ connection.onInitialize((params: InitializeParams) => {
 	const result: InitializeResult = {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
-			// Tell the client that this server supports code completion.
+			// Tell the client that this server right now doesnt supports code completion.
 			completionProvider: {
-				resolveProvider: true
+				resolveProvider: false
 			}
 		}
 	};
@@ -81,15 +81,114 @@ connection.onInitialized(() => {
 	}
 });
 
-// The example settings
+// The settings
 interface ExampleSettings {
 	maxNumberOfProblems: number;
+	outlineStructure: {
+		sections: Section[]
+	};
+}
+export interface Section {
+	name: string
+	required: boolean
+	keywords: string[]
 }
 
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
-// Please note that this is not the case when using this server with the client provided in this example
-// but could happen with other clients.
-const defaultSettings: ExampleSettings = { maxNumberOfProblems: 1000 };
+// Please note that this is not the case when using this server with the client provided
+// but could happen with further clients or changes.
+const defaultSettings: ExampleSettings = { 
+	maxNumberOfProblems: 1000, 
+	outlineStructure: {
+		sections:  [
+			{
+				name: "Description",
+				required: true,
+				keywords:[
+					"Description",
+					"Why?",
+					"Overview",
+					"Introduction",
+					"Demo",
+					"Example",
+					"Examples",
+					"About"
+				]
+			},
+			{
+				name: "Table of contents",
+				required: true,
+				keywords:[
+					"Table of contents",
+					"listing",
+					"tabular array",
+					"agenda",
+					"Contents"
+				]
+			},
+			{			
+				name: "Installation",
+				required: false,
+				keywords:[
+					"Installation",
+					"How To",
+					"Quick start",
+					"Install",
+					"Getting Started",
+					"Quickstart",
+					"Setup"
+				]
+			},
+			{			
+				name: "Usage",
+				required: false,
+				keywords:[
+					"Usage",
+					"Configuration",
+					"Options",
+					"Implementation",
+					"Configure"
+				]
+			},
+			{			
+				name: "Contributing",
+				required: false,
+				keywords:[
+					"Contributing",
+					"Related",
+					"Involve",
+					"Contribute",
+					"Assistance",
+					"Contact",
+					"Development"
+				]
+			},
+			{			
+				name: "Credits",
+				required: false,
+				keywords:[
+					"Credits",
+					"Tribute",
+					"Acknowledgement",
+					"Thanks",
+					"Supporters",
+					"Contributors",
+					"Community"
+				]
+			},
+			{			
+				name: "License",
+				required: false,
+				keywords:[
+					"License",
+					"Permission",
+					"Consent"
+				]
+			},
+		]
+	},
+};
+
 let globalSettings: ExampleSettings = defaultSettings;
 
 // Cache the settings of all open documents
@@ -109,7 +208,7 @@ connection.onDidChangeConfiguration(change => {
 	documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
+export function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
 	if (!hasConfigurationCapability) {
 		return Promise.resolve(globalSettings);
 	}
@@ -136,51 +235,23 @@ documents.onDidChangeContent(change => {
 });
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	// In this simple example we get the settings for every validate run.
-	const settings = await getDocumentSettings(textDocument.uri);
 
-	// The validator creates diagnostics for all uppercase words length 2 and more
-	const text = textDocument.getText();
-	const pattern = /\b[A-Z]{2,}\b/g;
-	let m: RegExpExecArray | null;
-
-	let problems = 0;
 	const diagnostics: Diagnostic[] = [];
-	while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-		problems++;
-		const diagnostic: Diagnostic = {
-			severity: DiagnosticSeverity.Warning,
-			range: {
-				start: textDocument.positionAt(m.index),
-				end: textDocument.positionAt(m.index + m[0].length)
-			},
-			message: `${m[0]} is all uppercase.`,
-			source: 'ex'
-		};
-		if (hasDiagnosticRelatedInformationCapability) {
-			diagnostic.relatedInformation = [
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Spelling matters'
-				},
-				{
-					location: {
-						uri: textDocument.uri,
-						range: Object.assign({}, diagnostic.range)
-					},
-					message: 'Particularly for names'
-				}
-			];
+	// Validate the documents outline structure if it is a Readme File	
+	if (textDocument.uri.endsWith("README.md")) {
+		// check when the document was last edited
+		const lastEdited = new Date(textDocument.version);
+		if(lastEdited > new Date(+30)) {
+			// if the document was edited more than 30 days ago, show a information message
+			connection.window.showInformationMessage("This README.md file was last edited more than 30 days ago. Please check if it is still up to date.");
 		}
-		diagnostics.push(diagnostic);
+		// validate the outline structure
+		const outlineStructureDiagnostic: Diagnostic[] = await validateOutlineStructure(textDocument);
+		if(outlineStructureDiagnostic.length > 0) {
+			diagnostics.push(...outlineStructureDiagnostic);
+		}
+		// include more validation here
 	}
-
-	diagnostics.push(
-		validateOutlineStructure(textDocument)
-	)
 	// Send the computed diagnostics to VSCode.
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
@@ -189,42 +260,6 @@ connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode
 	connection.console.log('We received an file change event');
 });
-
-// This handler provides the initial list of the completion items.
-connection.onCompletion(
-	(_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-		// The pass parameter contains the position of the text document in
-		// which code complete got requested. For the example we ignore this
-		// info and always provide the same completion items.
-		return [
-			{
-				label: 'TypeScript',
-				kind: CompletionItemKind.Text,
-				data: 1
-			},
-			{
-				label: 'JavaScript',
-				kind: CompletionItemKind.Text,
-				data: 2
-			}
-		];
-	}
-);
-
-// This handler resolves additional information for the item selected in
-// the completion list.
-connection.onCompletionResolve(
-	(item: CompletionItem): CompletionItem => {
-		if (item.data === 1) {
-			item.detail = 'TypeScript details';
-			item.documentation = 'TypeScript documentation';
-		} else if (item.data === 2) {
-			item.detail = 'JavaScript details';
-			item.documentation = 'JavaScript documentation';
-		}
-		return item;
-	}
-);
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events
