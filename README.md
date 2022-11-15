@@ -41,6 +41,11 @@ When editing your `README.md` this linter is checking following features:
 - outline structure of the README should match recommended outlines by the [paper](https://www.sciencedirect.com/science/article/abs/pii/S0950584922000775?via%3Dihub#preview-section-snippets).
 - TBA
 
+Note: it is recommended to also consider following extension for a better Documentation Quality in your README file
+
+- [markdownlint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
+- [Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one)
+
 ## Contributing
 
 - Install Node.js
