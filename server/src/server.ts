@@ -6,13 +6,9 @@ import {
 	createConnection,
 	TextDocuments,
 	Diagnostic,
-	DiagnosticSeverity,
 	ProposedFeatures,
 	InitializeParams,
 	DidChangeConfigurationNotification,
-	CompletionItem,
-	CompletionItemKind,
-	TextDocumentPositionParams,
 	TextDocumentSyncKind,
 	InitializeResult
 } from 'vscode-languageserver/node';
@@ -20,7 +16,7 @@ import {
 import {
 	TextDocument
 } from 'vscode-languageserver-textdocument';
-import { validateOutlineStructure } from './readmyreadme';
+import { OutlineStructureValidator } from './readmyreadme';
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -28,6 +24,8 @@ const connection = createConnection(ProposedFeatures.all);
 
 // Create a the text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+// Create outlinestructure validator
+let outlineStructureValidator = new OutlineStructureValidator();
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
@@ -82,7 +80,7 @@ connection.onInitialized(() => {
 });
 
 // The settings
-interface ExampleSettings {
+export interface ExampleSettings {
 	maxNumberOfProblems: number;
 	outlineStructure: {
 		sections: Section[]
@@ -97,14 +95,14 @@ export interface Section {
 // The global settings, used when the `workspace/configuration` request is not supported by the client.
 // Please note that this is not the case when using this server with the client provided
 // but could happen with further clients or changes.
-const defaultSettings: ExampleSettings = { 
-	maxNumberOfProblems: 1000, 
+const defaultSettings: ExampleSettings = {
+	maxNumberOfProblems: 1000,
 	outlineStructure: {
-		sections:  [
+		sections: [
 			{
 				name: "Description",
 				required: true,
-				keywords:[
+				keywords: [
 					"Description",
 					"Why?",
 					"Overview",
@@ -118,29 +116,30 @@ const defaultSettings: ExampleSettings = {
 			{
 				name: "Table of contents",
 				required: true,
-				keywords:[
+				keywords: [
 					"Table of content",
 					"listing",
 					"tabular array",
 					"agenda"
 				]
 			},
-			{			
+			{
 				name: "Installation",
 				required: true,
-				keywords:[
+				keywords: [
 					"Installation",
 					"How To",
 					"Quick start",
 					"Getting Started",
 					"Quickstart",
-					"Setup"
+					"Setup",
+					"Install"
 				]
 			},
-			{			
+			{
 				name: "Usage",
 				required: true,
-				keywords:[
+				keywords: [
 					"Usage",
 					"Configuration",
 					"Options",
@@ -148,10 +147,10 @@ const defaultSettings: ExampleSettings = {
 					"Configure"
 				]
 			},
-			{			
+			{
 				name: "Contributing",
 				required: true,
-				keywords:[
+				keywords: [
 					"Contributing",
 					"Related",
 					"Involve",
@@ -162,10 +161,10 @@ const defaultSettings: ExampleSettings = {
 					"Contribution"
 				]
 			},
-			{			
+			{
 				name: "Credits",
 				required: true,
-				keywords:[
+				keywords: [
 					"Credits",
 					"Tribute",
 					"Acknowledgement",
@@ -175,10 +174,10 @@ const defaultSettings: ExampleSettings = {
 					"Community"
 				]
 			},
-			{			
+			{
 				name: "License",
 				required: true,
-				keywords:[
+				keywords: [
 					"License",
 					"Permission",
 					"Consent"
@@ -199,7 +198,7 @@ connection.onDidChangeConfiguration(change => {
 		documentSettings.clear();
 	} else {
 		globalSettings = <ExampleSettings>(
-			(change.settings.languageServerExample || defaultSettings)
+			(change.settings.readmyreadme || defaultSettings)
 		);
 	}
 
@@ -229,27 +228,26 @@ documents.onDidClose(e => {
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-documents.onDidChangeContent(change => {
+documents.onDidOpen(change => {
+	validateTextDocument(change.document);
+});
+documents.onDidSave(change => {
 	validateTextDocument(change.document);
 });
 
+// Validation of given text document
+// The text document is validated for outline structure
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-
 	const diagnostics: Diagnostic[] = [];
-	// Validate the documents outline structure if it is a Readme File	
+
+	//validate only readme files
 	if (textDocument.uri.endsWith("README.md")) {
-		// check only on first start MOCKED FOR NOW
-		if (textDocument.version == 1) {
-			// if the document was edited more than 30 days ago, show a information message
-			connection.window.showInformationMessage("This README.md file was last edited more than 30 days ago. Please check if it is still up to date.");
-		}
 		// validate the outline structure
-		const outlineStructureDiagnostic: Diagnostic[] = await validateOutlineStructure(textDocument);
-		if(outlineStructureDiagnostic.length > 0) {
-			diagnostics.push(...outlineStructureDiagnostic);
-		}
+		const outlineStructureDiagnostic: Diagnostic[] = await outlineStructureValidator.validateOutlineStructure(textDocument);
+		diagnostics.push(...outlineStructureDiagnostic);
 		// include more validation here
 	}
+
 	// Send the computed diagnostics to VSCode.
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }

@@ -40,8 +40,8 @@ export function activate(context: ExtensionContext) {
 		// Register the server for plain text documents
 		documentSelector: [{ scheme: 'file', language: 'markdown' }],
 		synchronize: {
-			// Notify the server about file changes to '.clientrc files contained in the workspace
-			fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
+			// Notify the server about file changes to 'Readme.md files contained in the workspace
+			fileEvents: workspace.createFileSystemWatcher('**/Readme.md')
 		}
 	};
 

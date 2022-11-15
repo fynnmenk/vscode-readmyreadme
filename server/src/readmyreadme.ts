@@ -1,99 +1,102 @@
 import { Diagnostic, DiagnosticSeverity, Range } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { getDocumentSettings , Section} from './server';
+import { getDocumentSettings, Section } from './server';
 
-//checks if headline in given textDocument matches the outline structure
-export async function validateOutlineStructure(textDocument: TextDocument): Promise<Diagnostic[]> {
-	const settings = await getDocumentSettings(textDocument.uri);
-    
-    const readMeHeadlines = getHeadlinesFromTextDocument(textDocument);    
-    const structureDiagnostics: Diagnostic[] = [];
+type Headline = { headline: string; range: Range; };
 
-    let missingSections = Object.entries(settings.outlineStructure.sections).map(([key, value]) => value);
-    //check if section is in document
-    readMeHeadlines.forEach((headline) => {
-        let diagnostic = analyzeTextDocumentHeadline(headline.headline, headline.range, missingSections);
-        //update structureDiagnostics with found errors
-        if(diagnostic[0]) {
+//create Class for analyzing outline Structure
+export class OutlineStructureValidator {
+    //validate outline structure of a document
+    public async validateOutlineStructure(textDocument: TextDocument): Promise<Diagnostic[]> {
+        const settings = getDocumentSettings(textDocument.uri);
+        const readMeHeadlines = this.getHeadlinesFromTextDocument(textDocument);
+        const structureDiagnostics: Diagnostic[] = [];
+        let missingSections = Object.entries((await settings).outlineStructure.sections).map(([key, value]) => value);
+
+        readMeHeadlines.forEach((headline) => {
+            let diagnosticAndMissingSections = this.analyzeTextDocumentHeadline(headline.headline, headline.range, missingSections);
+            //update structureDiagnostics with found errors
+            if (diagnosticAndMissingSections[0] != undefined) {
+                structureDiagnostics.push(
+                    diagnosticAndMissingSections[0]
+                );
+            }
+            //update missing sections
+            if (diagnosticAndMissingSections[1].length > 0) {
+                missingSections = diagnosticAndMissingSections[1];
+            }
+        });
+
+        //check if a headline is still missing
+        missingSections.forEach((section, key) => {
             structureDiagnostics.push(
-                diagnostic[0]
+                this.createDiagnosticForMissingSections(section)
             );
+        });
+
+        return structureDiagnostics;
+    }
+
+    // get Headlines from TextDocument and return them as array with headline and range
+    public getHeadlinesFromTextDocument(textDocument: TextDocument): Headline[] {
+        const text = textDocument.getText();
+        const pattern: RegExp = /(?<=(^## )).*/gm;
+        let headlineArray: Headline[] = [];
+        let m: RegExpExecArray | null;
+        while (m = pattern.exec(text)) {
+            const headline: Headline = {
+                headline: m[0],
+                range: Range.create(textDocument.positionAt(m.index), textDocument.positionAt(m.index + m[0].length))
+            };
+            headlineArray.push(headline);
         }
-        //update missing sections
-        if(diagnostic[1].length > 0) {
-            missingSections = diagnostic[1];
-        }   
-    });
 
-    //check if a headline is still missing
-    missingSections.forEach((section, key) => {
-        structureDiagnostics.push(
-            createDiagnosticForMissingSections(section)
-        );
-    });
+        return headlineArray;
+    }
 
-    return structureDiagnostics;
-}
+    // analyze given headline and return diagnostic and missing sections
+    public analyzeTextDocumentHeadline(headline: string, headlineRange: Range, missingSections: Section[]): [Diagnostic | void, Section[]] {
+        let headlineMatch = false;
 
-// analyze given headline and return diagnostic and missing sections
-function analyzeTextDocumentHeadline(headline : string, headlineRange: Range, missingSections: Section[]): [Diagnostic | void, Section[]] {
-    let headlineMatch = false;
-
-    //check if headline matches missing headlines out of settings
-    missingSections.forEach((section, key) => {
-        section.keywords.forEach((keyword) => {
+        //check if headline matches missing headlines out of settings
+        missingSections.forEach((section, key) => {
             //check if headline matches keyword aslong no match is found
-            while (headlineMatch == false) {
-                if(headline.toLowerCase().includes(keyword.toLowerCase())) {
+            if (headlineMatch === false) {
+                let found = section.keywords.find((keyword) => {
+                    return headline.toLowerCase().includes(keyword.toLowerCase());
+                });
+                if (found !== undefined) {
                     missingSections.splice(key, 1);
                     headlineMatch = true;
                 }
             }
         });
-    });
 
-    //create diagnostic if headline does not match
-    if (!headlineMatch) {
+        //create diagnostic if headline does not match
+        if (!headlineMatch) {
+            const diagnosticForHeadline: Diagnostic = {
+                severity: DiagnosticSeverity.Warning,
+                range: headlineRange,
+                message: `This headline does not match the recommended outline structure.`,
+                source: "outline"
+            };
+            return [diagnosticForHeadline, missingSections];
+        }
+        //return empty diagnostic if headline matches
+        return [undefined, missingSections];
+    }
+
+    //create diagnostic for missing sections
+    public createDiagnosticForMissingSections(section: Section): Diagnostic {
+        let sectionNameArray = Object.entries(section).filter(([key]) => key === "name");
+        let sectionName = sectionNameArray[0][1];
+
         const diagnostic: Diagnostic = {
             severity: DiagnosticSeverity.Warning,
-			range: headlineRange,
-            message: `This headline does not match the recommended outline structure.`,
+            range: Range.create(0, 0, 0, 0),
+            message: `The section ${sectionName} is missing. It is recommended to add it to your outline.`,
             source: "outline"
         };
-        return [diagnostic, missingSections];
+        return diagnostic;
     }
-    //return empty diagnostic if headline matches
-    return [undefined, missingSections];
-}
-
-//create diagnostic for missing sections
-function createDiagnosticForMissingSections(section: Section): Diagnostic {
-    let sectionNameArray = Object.entries(section).filter(([key]) => key === "name");
-    let sectionName = sectionNameArray[0][1];
-    
-    const diagnostic: Diagnostic = {
-        severity: DiagnosticSeverity.Warning,
-        range: Range.create(0, 0, 0, 0),
-        message: `The section ${sectionName} is missing. It is recommended to add it to your outline.`,
-        source: "outline"
-    };
-    return diagnostic;
-}
-
-type Headline = { headline: string; range: Range; };
-
-// get Headlines from TextDocument and return them as array with headline and range
-function getHeadlinesFromTextDocument(textDocument: TextDocument) {
-    const text = textDocument.getText();
-    const pattern : RegExp = /(?<=(^#)\s).*/gm;;
-    let headlineArray: Headline[]  = [];
-    let m: RegExpExecArray | null;
-    while (m = pattern.exec(text)) {
-        const headline: Headline = {
-            headline: m[0],
-            range: Range.create(textDocument.positionAt(m.index), textDocument.positionAt(m.index + m[0].length))
-        };
-        headlineArray.push(headline);
-    }
-    return headlineArray;
 }
