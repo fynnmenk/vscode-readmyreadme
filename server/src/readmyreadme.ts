@@ -78,7 +78,7 @@ export class OutlineStructureValidator {
                 severity: DiagnosticSeverity.Warning,
                 range: headlineRange,
                 message: `This headline does not match the recommended outline structure.`,
-                source: "outline"
+                source: "readmyreadme.outline"
             };
             return [diagnosticForHeadline, missingSections];
         }
@@ -95,7 +95,7 @@ export class OutlineStructureValidator {
             severity: DiagnosticSeverity.Warning,
             range: Range.create(0, 0, 0, 0),
             message: `The section ${sectionName} is missing. It is recommended to add it to your outline.`,
-            source: "outline"
+            source: "readmyreadme.outline"
         };
         return diagnostic;
     }

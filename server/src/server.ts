@@ -10,7 +10,8 @@ import {
 	InitializeParams,
 	DidChangeConfigurationNotification,
 	TextDocumentSyncKind,
-	InitializeResult
+	InitializeResult,
+	VersionedTextDocumentIdentifier
 } from 'vscode-languageserver/node';
 
 import {
@@ -240,6 +241,10 @@ documents.onDidSave(change => {
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const diagnostics: Diagnostic[] = [];
 
+	//check if the document is maintainend if not show information message
+	if (textDocument.version < 5) {
+		connection.window.showInformationMessage("This document is not maintained. Please consider to update it.");
+	}
 	//validate only readme files
 	if (textDocument.uri.endsWith("README.md")) {
 		// validate the outline structure
